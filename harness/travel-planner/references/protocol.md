@@ -18,7 +18,7 @@ state 저장은 총괄 단일 작성자로 제한한다. 같은 디렉터리의 
 
 ## 후보와 근거
 
-후보: id, name, category, address, area, fit_reason, duration_minutes, price_range, claims, alternatives. 정보가 없으면 null 또는 빈 배열로 남긴다. 지점이 다르면 별도 후보다.
+후보: id, name, category, address, area, description, fit_reason, duration_minutes, price_range, claims, alternatives. description은 여행자에게 필요한 설명(무엇을 볼 수 있는지·특징·역사·분위기 등 산출물에 그대로 실릴 내용)이며, fit_reason(총괄이 이 후보를 왜 선택했는지)과는 다른 필드다. 확인된 사실만 적고 지어내지 않는다 — 조사에서 얻지 못했으면 null로 남긴다. 정보가 없으면 null 또는 빈 배열로 남긴다. 지점이 다르면 별도 후보다.
 
 각 claim: field, value, status(verified/estimated/unknown/conflicting), sources(URL·publisher·checked_at·적용 날짜), note. 출처는 주장별로 연결한다. checked_at은 시간대 포함 ISO 형식이다. 운영자·공식 교통·공공기관을 운영 사실의 우선 출처로 삼고 후기·블로그는 취향과 발견에 활용한다. 충돌은 소수결로 해결하지 않는다.
 
