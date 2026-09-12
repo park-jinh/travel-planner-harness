@@ -173,6 +173,10 @@ def validate(plan):
 
 
 if __name__ == '__main__':
+    # Force UTF-8 output regardless of the console codepage (e.g. Windows cp949),
+    # otherwise printing non-cp949 punctuation (em dash, curly quotes, ...) raises
+    # a UnicodeEncodeError that the except clause below misreports as input_error.
+    sys.stdout.reconfigure(encoding='utf-8')
     try:
         with open(sys.argv[1], encoding='utf-8-sig') as stream:
             result = validate(json.load(stream, parse_float=Decimal))

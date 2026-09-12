@@ -75,3 +75,10 @@
 2. **logistics/숙박 역할 분리 기준 명문화**: `roles/logistics.md`를 이동 전용으로 축소하고, 숙박 전용 `roles/lodging.md`(discovery-lodging)를 새로 만들어 `roles/registry.json`에 등록했다. 기본 분리 기준(2개 도시 이상 이동 또는 숙박 3박 이상)을 `references/roles.md` 표와 `SKILL.md` 5단계에 명시했다. 그 미만 규모는 기존처럼 logistics가 겸임한다. `adapters/claude.md`의 delegate 목록도 갱신했다. `test_registry_paths_exist`가 새 역할 파일 존재를 자동으로 검증했다(수정 없이 통과).
 3. **부분 재감사(scoped audit) 경로 추가**: 이번 세션의 발단(Codex 토큰 소진)과 직결된 항목이다. `references/protocol.md`에 부분 재감사 조건(budget·통화·required_ids·인원/객실·날짜·일수 불변, 변경 item/후보/cost 2개 이하)과 절차를 추가했다. `roles/auditor.md`에 scope(full/scoped) 입력·출력 필드, 선언되지 않은 변경을 발견하면 즉시 failed로 중단하는 안전장치, carried_forward(직전 감사에서 재검증 없이 옮긴 항목)를 추가했다. `roles/coordinator.md` 6단계와 `SKILL.md` 7단계에서 조건 충족 시에만 scope=scoped를 요청하도록 연결했다.
 - 36개 테스트 회귀 통과 유지. 세 항목 모두 지침·계약 변경이며, scoped audit이 실제 다회차 수정 시나리오에서 비용을 얼마나 줄이는지와 lodging 분리가 실제 다도시 여행에서 잘 작동하는지는 첫 실제 여행 실행에서 확인한다.
+
+## 첫 실제 여행 실행 — 서울→대구 1박2일 (같은 검증일)
+
+- 사용자가 실제 여행(서울 출발, 대구 1박2일 2026-09-18~19, 2인, 대중교통, 2인 총 60만원 KRW)을 요청해 총괄·조사자 3명(discovery-food/discovery-experience/logistics+lodging 겸임 — 1개 도시·1박이라 분리 기준 미달)을 실제로 실행했다. 합성 데이터가 아니라 실제 웹 조사(뭉티기·막창 실존 매장, 2026-09 KTX·SR 통합 요금, 대구도시철도 실제 노선도)다.
+- **실제 버그 발견·수정**: `scripts/validate_plan.py`를 Windows Git Bash(cp949 콘솔)에서 실행하니, 계획 JSON 자체는 문제없는데 `unresolved` 문구의 줄표(—, U+2014)가 cp949로 인코딩 불가해 `print()`가 UnicodeEncodeError를 던졌고, 이를 broad except가 잡아 "input_error"(입력 형태 오류)로 잘못 보고했다. PowerShell(UTF-8 콘솔)에서는 동일 파일이 정상 통과(exit 0)해 계획 자체는 정상임을 먼저 확인했다. `sys.stdout.reconfigure(encoding='utf-8')`을 추가해 콘솔 코드페이지와 무관하게 항상 UTF-8로 출력하도록 고쳤다. 이 버그는 한글 텍스트 자체는 cp949로 정상 인코딩되기 때문에 이전의 어떤 합성 스모크테스트에서도 드러나지 않았고, 줄표 같은 문장부호가 실제 한국어 글쓰기 습관으로 자연스럽게 들어간 이번 실사용에서야 발견됐다.
+- `tests/test_validate_plan.py`에 회귀 테스트(`test_cli_handles_non_cp949_characters`)를 추가했다. 자식 프로세스만 `PYTHONIOENCODING=cp949`로 강제하고 부모 프로세스는 `subprocess.run(..., encoding='utf-8')`로 명시 디코딩해야 한다는 것도 직접 겪었다 — 그렇지 않으면 이 Windows 환경의 기본 로케일이 cp949라 테스트 자체도 부모 쪽에서 같은 종류의 디코딩 오류로 거짓 실패했다. 37개 테스트 통과.
+- 코드 검사 결과: errors=0, known_cost_subtotal=[351000, 502000] KRW, budget_amount=600000 KRW — 동대구역 인근 식사(장소 미지정, 비용 unknown) 1건을 제외하고도 상한선 기준 예산 내(여유 약 98,000원 이상).
