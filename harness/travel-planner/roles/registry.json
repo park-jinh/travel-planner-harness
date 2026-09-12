@@ -1,0 +1,9 @@
+{
+  "coordinator": "roles/coordinator.md",
+  "discovery-food": "roles/food.md",
+  "discovery-experience": "roles/experience.md",
+  "logistics": "roles/logistics.md",
+  "discovery-lodging": "roles/lodging.md",
+  "auditor": "roles/auditor.md",
+  "artifact-producer": "roles/artifact-producer.md"
+}

@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+runs/
+eval-output/
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.codex/
+*.log
