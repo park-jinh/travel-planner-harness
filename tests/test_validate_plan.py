@@ -1,5 +1,6 @@
 import copy
 import importlib.util
+import os
 from pathlib import Path
 import unittest
 import json
@@ -74,6 +75,23 @@ class ValidationTests(unittest.TestCase):
             result = subprocess.run([sys.executable,str(SCRIPT),str(path)],capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stdout)
             self.assertEqual(json.loads(result.stdout)['cost_range'],[3.3,3.3])
+
+    def test_cli_handles_non_cp949_characters(self):
+        # A real Daegu trip plan crashed here: an em dash (—) in `unresolved`
+        # isn't representable in Windows' cp949 codepage, so print() raised
+        # UnicodeEncodeError and the CLI misreported a valid plan as input_error.
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'plan.json'
+            p = fixture()
+            p['unresolved'] = ['em dash — curly quotes “x” should not crash the CLI']
+            path.write_text(json.dumps(p), encoding='utf-8')
+            env = dict(os.environ, PYTHONIOENCODING='cp949')
+            # encoding='utf-8' here is the *test harness* decoding the child's stdout pipe
+            # correctly regardless of this machine's own locale — independent of PYTHONIOENCODING,
+            # which only forces the *child* CLI (under test) to emit cp949 instead of UTF-8.
+            result = subprocess.run([sys.executable, str(SCRIPT), str(path)], capture_output=True, encoding='utf-8', env=env)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn('input_error', result.stdout)
 
     def test_non_korean_currency(self):
         p = fixture(); p['budget_currency'] = 'EUR'; p['costs'][0]['currency'] = 'EUR'
